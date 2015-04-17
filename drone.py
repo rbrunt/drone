@@ -2,68 +2,67 @@ import sqlite3
 from lxml import etree, objectify
 import re
 
-def check_italic_tags_present(lines):
+def check_italic_tags_present(text):
 	"""Checks to see if the verse is wrapped in italics tags."""
-	return lines[0][0:4]=="{it}" and lines[-1][-5:]=="{/it}"
+	return text[0:4]=="{it}" and text[-5:]=="{/it}"
 
-def trim_italic_tags(lines):
+def trim_italic_tags(text):
 	"""Remove italic tags from beginning and end of verse"""
-	if check_italic_tags_present(lines):
+	if check_italic_tags_present(text):
 		#only intersted in changing the first and last lines, otherwise we might interfere with other formatting tags!
-		lines[0] = re.sub(r"(^{it})", "", lines[0])
-		lines[-1] = re.sub(r"({ */it}$)", "", lines[-1])
-	return lines
+		text = re.sub(r"(^{it})", "", text)
+		text = re.sub(r"({ */it}$)", "", text)
+	return text
 	
-def add_italic_tags(lines):
+def add_italic_tags(text):
 	"""Add wrapping italic tags to verse"""
-	if not check_italic_tags_present(lines):
-		lines[0] = "{it}" + lines[0]
-		lines[-1] = lines[-1] + "{/it}"
-	return lines
+	if not check_italic_tags_present(text):
+		text = "{it}" + text
+		text = text + "{/it}"
+	return text
 
 
 
 conn = sqlite3.connect("songs.sqlite")
+conn.text_factory = str
 c = conn.cursor()
 
 c.execute("SELECT lyrics from songs")
 
 
-xml = c.fetchone()[0]
-
-#xmlfile = open("lyrics.xml", "w")
-#xmlfile.write(xml.encode("UTF-8"))
-#xmlfile.close()
-
-try:
-	song_xml = objectify.fromstring(xml[38:])
-except etree.XMLSyntaxError:
-	exit("error")
-
-verses = song_xml.lyrics.verse
-newverses = []
-for i in xrange(len(verses)):
-
-	attribs = verses[i].attrib
-	text = verses[i].text
-	if attribs["type"]=="c":
-		lines = trim_italic_tags(text.split("\n"))
-		text = "\n".join(lines)
-	verse = etree.Element('verse', **attribs)
-	verse.text = etree.CDATA(text)
-	newverses.append(verse)
-	
-song_xml.lyrics.verse = newverses
+xmllist = c.fetchall()
 
 
-generatedxml = etree.tostring(song_xml, encoding='UTF-8', xml_declaration=True)
+italics = "add"
 
-conn.text_factory = str
-c.execute("UPDATE songs SET lyrics=? WHERE id=4;", [generatedxml])
-conn.commit()
-#xmlfile = open("lyrics2.xml", "w")
-#xmlfile.write(generatedxml)
-#xmlfile.close()
+for xmlindex in xrange(len(xmllist)):
+	try:
+		song_xml = objectify.fromstring(xmllist[xmlindex][0][38:])
+	except etree.XMLSyntaxError:
+		exit("error")
+
+	verses = song_xml.lyrics.verse
+	newverses = []
+	for i in xrange(len(verses)):
+
+		attribs = verses[i].attrib
+		text = verses[i].text
+		if attribs["type"]=="c":
+			if italics == "add":
+				text = add_italic_tags(text)
+			elif italics == "remove":
+				text = trim_italic_tags(text)
+		verse = etree.Element('verse', **attribs)
+		verse.text = etree.CDATA(text)
+		newverses.append(verse)
+		
+	song_xml.lyrics.verse = newverses
+
+
+	generatedxml = etree.tostring(song_xml, encoding='UTF-8', xml_declaration=True)
+
+	c.execute("UPDATE songs SET lyrics=? WHERE id=?;", [generatedxml, xmlindex+1])
+	conn.commit()
 
 
 
