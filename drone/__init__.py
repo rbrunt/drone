@@ -5,6 +5,8 @@ import tags, db
 italics = "add"
 
 def main():
+	#Make a backup!
+	db.backup_db()
 	conn = sqlite3.connect(db.get_songs_db_path())
 	conn.text_factory = str
 	c = conn.cursor()
