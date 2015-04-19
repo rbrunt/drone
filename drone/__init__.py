@@ -5,7 +5,7 @@ import tags, db
 italics = "add"
 
 def main():
-	conn = sqlite3.connect("songs.sqlite")
+	conn = sqlite3.connect(db.get_songs_db_path())
 	conn.text_factory = str
 	c = conn.cursor()
 
