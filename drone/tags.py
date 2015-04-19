@@ -1,18 +1,23 @@
 import re
 
 
-def check_generic_tag_wrap(text):
-	#return re.match(r"(^\{\w+\}).*(\{/\w+\}$)", text.strip(), re.DOTALL) != None
-	return re.match(r"(^\{(\w+)\}).*(\{/(\2)\}$)", text.strip(), re.DOTALL) != None # Require that the tags are the same...
+generic_tag_regex = re.compile(r"(^\{(\w+)\}).*(\{/(\2)\}$)", re.DOTALL)
 
 def get_wrapping_tags(text):
-	match =  re.match(r"(^\{(\w+)\}).*(\{/(\2)\}$)", text.strip(), re.DOTALL)
-	return match.group(2)
+	"""Get the name of the tags wrapping the text. Return None if there aren't any"""
+	match =  re.match(generic_tag_regex, text.strip())
+	if match != None:
+		return match.group(2)
+	else:
+		return None
+
+def check_generic_tag_wrap(text):
+	"""Check if the text is wrapped by __matching__, but indeterminate, tags"""
+	return get_wrapping_tags(text) != None
 
 def check_tag_wrap(tag, text):
 	"""Checks to see if the give OpenLP tags wrap the verse or not"""
-	text = text.strip()
-	return text.startswith("{{{tag}}}".format(tag=tag)) and text.endswith("{{/{tag}}}".format(tag=tag))
+	return get_wrapping_tags(text) == tag
 
 def add_tags(tag, text):
 	if not check_tag_wrap(tag, text):
@@ -20,9 +25,10 @@ def add_tags(tag, text):
 	else:
 		return text
 
+
 def check_italic_tags_present(text):
 	"""Checks to see if the verse is wrapped in italics tags."""
-	return text[0:4]=="{it}" and text[-5:]=="{/it}"
+	return check_tag_wrap("it", text)
 
 def trim_italic_tags(text):
 	"""Remove italic tags from beginning and end of verse"""
