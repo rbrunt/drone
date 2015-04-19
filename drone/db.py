@@ -17,7 +17,7 @@ def backup_db():
 	shutil.copy(get_songs_db_path(), os.path.join(get_songs_directory(), "songs.sqlite.dronebackup"))
 
 def restore_backup():
-	shutil.copy(os.path.join(get_songs_directory(), "songs.sqlite.dronebackup"), get_songs_db_path())
+	shutil.move(os.path.join(get_songs_directory(), "songs.sqlite.dronebackup"), get_songs_db_path())
 
 #On import, set the data_path variable.
 data_path = get_data_path()
