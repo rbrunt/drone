@@ -1,6 +1,8 @@
 import sqlite3
 from lxml import etree, objectify
-import tags
+import tags, db
+
+italics = "add"
 
 def main():
 	conn = sqlite3.connect("songs.sqlite")
@@ -11,9 +13,6 @@ def main():
 
 
 	xmllist = c.fetchall()
-
-
-	italics = "add"
 
 	for xmlindex in xrange(len(xmllist)):
 		try:

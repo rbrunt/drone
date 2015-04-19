@@ -1,6 +1,6 @@
 import re
 
-
+# Precompile regex which will be used fairly extensively:
 generic_tag_regex = re.compile(r"(^\{(\w+)\}).*(\{/(\2)\}$)", re.DOTALL)
 
 def get_wrapping_tags(text):
