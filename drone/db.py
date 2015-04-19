@@ -1,11 +1,15 @@
 import os
+import sys
 import shutil
-import _winreg
 
 def get_data_path():
-	#TODO: makde this platform specific..
-	reg_key = _winreg.OpenKey(_winreg.HKEY_CURRENT_USER, r"Software\OpenLP\OpenLP\advanced")
-	return _winreg.QueryValueEx(reg_key, "data path")[0]
+	if sys.platform == "win32":
+		import _winreg
+		reg_key = _winreg.OpenKey(_winreg.HKEY_CURRENT_USER, r"Software\OpenLP\OpenLP\advanced")
+		return _winreg.QueryValueEx(reg_key, "data path")[0]
+	else:
+		#TODO: makde this platform specific...
+		exit("Drone currently only works on Windows!")
 
 def get_songs_directory():
 	return os.path.join(data_path, "songs")
